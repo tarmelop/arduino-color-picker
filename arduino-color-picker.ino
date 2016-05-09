@@ -2,10 +2,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <CurieBLE.h>
 
-#define NUMPIXELS      7
-#define LED_DATA_PIN   6
-#define BUTTON_PIN     2
-#define BLE_CONNECTED  13
+#define NUMPIXELS       7
+#define LED_DATA_PIN    6
+#define BUTTON_PIN      2
+#define SENSOR_LED_PIN  3
+#define BLE_CONNECTED   13
 
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
@@ -21,7 +22,7 @@ BLECharacteristic currentColorChar("a56ada04-ed09-11e5-9c97-0002a5d5c51b", BLERe
 
 void setup() {
 
-  //while (!Serial); // arduino 101: wait for Serial to be init
+  while (!Serial); // arduino 101: wait for Serial to be init
 
   Serial.begin(9600);
   Serial.println("Color Picker Running!");
@@ -35,7 +36,9 @@ void setup() {
     while (1); // halt!
   }
 
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(SENSOR_LED_PIN, OUTPUT);
+  digitalWrite(SENSOR_LED_PIN, LOW);
   
   // thanks PhilB for this gamma table!
   // it helps convert RGB colors to what humans see
@@ -77,10 +80,12 @@ void loop() {
     digitalWrite(BLE_CONNECTED, LOW);  
   }
 
-  if (digitalRead(BUTTON_PIN) == HIGH){
+  if (digitalRead(BUTTON_PIN) == LOW){
 
+    digitalWrite(SENSOR_LED_PIN, HIGH);
     delay(60);  // takes 50ms to read
     tcs.getRawData(&red, &green, &blue, &clear);
+    digitalWrite(SENSOR_LED_PIN, LOW);
     
     // Figure out some basic hex code for visualization
     uint32_t sum = clear;
